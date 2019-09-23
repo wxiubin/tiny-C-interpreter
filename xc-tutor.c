@@ -29,7 +29,6 @@ enum {
 	Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt, Le, Ge, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak
 };
 
-
 int token_val;
 int *current_id, *symblos;
 enum { Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize };
@@ -271,6 +270,67 @@ void next() {
 	return;
 }
 
+void match(int tk) {
+	if (token != tk) {
+		printf("expected token: %d(%c), got: %d(%c)\n", tk, tk, token, token);
+		exit(-1);
+	}
+	next();
+}
+
+int expr();
+
+int factor() {
+	int value = 0;
+	if (token == '(') {
+		match('(');
+		value = expr();
+		match(')');
+	} else {
+		value = token_val;
+		match(Num);
+	}
+	return value;
+}
+
+int term_tail(int lvalue) {
+	if (token == '*') {
+		match('*');
+		int value = lvalue * factor();
+		return term_tail(value);
+	} else if (token == '/') {
+		match('/');
+		int value = lvalue / factor();
+		return term_tail(value);
+	} else {
+		return lvalue;
+	}
+}
+
+int term() {
+	int lvalue = factor();
+	return term_tail(lvalue);
+}
+
+int expr_tail(int lvalue) {
+	if (token == '+') {
+		match('+');
+		int value = lvalue + term();
+		return expr_tail(value);
+	} else if (token == '-') {
+		match('-');
+		int value = lvalue - term();
+		return expr_tail(value);
+	} else {
+		return lvalue;
+	}
+}
+
+int expr() {
+	int lvalue = term();
+	return expr_tail(lvalue);
+}
+
 /// 用于解析一个表达式
 void expression(int level) {
 	// do nothing
@@ -416,6 +476,13 @@ int main(int argc, char *argv[]) {
 	next(); current_id[Token] = Char; 	// handle void type
 	next(); idmain = current_id; 		// keep track of main
 	
+	size_t linecap = 0;
+	ssize_t linelen;
+	while ((linelen = getline(&line, &linecap, stdin)) > 0) {
+		src = line;
+		next();
+		printf("%d\n", expr());
+	}
 	
 	program();
 	return eval();
