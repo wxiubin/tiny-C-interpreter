@@ -37,6 +37,8 @@
 *.hex
 xc-tutor
 
+.idea/*
+
 # Debug files
 *.dSYM/
 *.su
