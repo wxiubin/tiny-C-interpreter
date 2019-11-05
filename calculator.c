@@ -17,11 +17,20 @@ int bracket(slm_expr *e);
 
 int stoi(slm_expr *e) {
 	char c = *e->str;
+	short minus = 0;
+	if (c == '-') {
+		minus = 1;
+		e->str++;
+		c = *e->str;
+	}
 	if (c < '0' || c > '9') {
 		THROW(CC_ERR_EXPECT_DIGIT)
 	}
 	int result = c - '0';
 	e->str++;
+	if (minus == 1) {
+		result *= -1;
+	}
 	return result;
 }
 
@@ -83,7 +92,7 @@ int slm_eval(const char *str, int *err_type) {
 }
 
 int main(int argc, char *argv[]) {
-	const char *test = "5-2*3";
+	const char *test = "-5-2*3";
 	int error = 0;
 	printf("result: %d\n", slm_eval(test, &error));
 	return error;
